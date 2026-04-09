@@ -1,0 +1,17 @@
+{
+  "name": "sd-blendz-booking-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "S&D Blendz booking site with serverless booking persistence and SMS hooks.",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo \"Static site build complete\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "resend": "^4.4.1"
+  },
+  "devDependencies": {
+    "netlify-cli": "^24.0.2"
+  }
+}

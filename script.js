@@ -1,10 +1,20 @@
-const STORAGE_KEY = "crown-barber-bookings-v1";
-const APPOINTMENT_LENGTH_MINUTES = 30;
+const APPOINTMENT_STEP_MINUTES = 30;
+const STORAGE_KEY = "sd-blendz-bookings-local-fallback-v1";
+const BOOKING_API_BASE = window.BOOKING_API_BASE || "";
 const SCHEDULE = {
   openingHour: 16,
   openingMinute: 0,
   closingHour: 20,
   closingMinute: 30,
+};
+
+const SERVICE_DEFINITIONS = {
+  "Classic Fade": { price: "$30", duration: 30 },
+  "Fade + Design": { price: "$35", duration: 30 },
+  "Buzz Cut": { price: "$30", duration: 30 },
+  "Beard Trim + Lineup": { price: "$35", duration: 30 },
+  "Cut + Beard Combo": { price: "$30", duration: 45 },
+  "Other Custom Style": { price: "$30", duration: 45 },
 };
 
 const dateInput = document.querySelector("#appointment-date");
@@ -26,21 +36,8 @@ const phoneInput = document.querySelector("#client-phone");
 const notesInput = document.querySelector("#client-notes");
 
 let selectedTime = "";
-
-function loadBookings() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return stored && typeof stored === "object" ? stored : {};
-  } catch (error) {
-    return {};
-  }
-}
-
-let bookings = loadBookings();
-
-function saveBookings() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
-}
+let selectedDateBookings = [];
+let bookingMode = "loading";
 
 function pad(value) {
   return String(value).padStart(2, "0");
@@ -70,19 +67,33 @@ function getNextWeekday(date = new Date()) {
   return next;
 }
 
-function getSlotTimes() {
+function getSelectedServiceInput() {
+  return serviceInputs.find((input) => input.checked) || null;
+}
+
+function getSelectedServiceDetails() {
+  const selectedServiceInput = getSelectedServiceInput();
+
+  if (!selectedServiceInput) {
+    return null;
+  }
+
+  return {
+    name: selectedServiceInput.value,
+    price: selectedServiceInput.dataset.price,
+    duration: Number(selectedServiceInput.dataset.duration),
+  };
+}
+
+function getSlotTimes(selectedDuration = APPOINTMENT_STEP_MINUTES) {
   const slots = [];
   let totalMinutes = SCHEDULE.openingHour * 60 + SCHEDULE.openingMinute;
   const closingMinutes = SCHEDULE.closingHour * 60 + SCHEDULE.closingMinute;
-  const selectedServiceInput = serviceInputs.find((input) => input.checked);
-  const duration = selectedServiceInput ? Number(selectedServiceInput.dataset.duration) : APPOINTMENT_LENGTH_MINUTES;
-  const latestStart = closingMinutes - duration;
+  const latestStart = closingMinutes - selectedDuration;
 
   while (totalMinutes <= latestStart) {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    slots.push(`${pad(hours)}:${pad(minutes)}`);
-    totalMinutes += APPOINTMENT_LENGTH_MINUTES;
+    slots.push(minutesToTimeValue(totalMinutes));
+    totalMinutes += APPOINTMENT_STEP_MINUTES;
   }
 
   return slots;
@@ -123,14 +134,93 @@ function formatDateLabel(date) {
   }).format(date);
 }
 
-function getBookingsForDate(dateValue) {
-  return Array.isArray(bookings[dateValue]) ? [...bookings[dateValue]] : [];
+function getBookingStartDateTime(dateValue, timeValue) {
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
-function sortBookingsForDate(dateValue) {
-  bookings[dateValue] = getBookingsForDate(dateValue).sort((first, second) => {
-    return first.time.localeCompare(second.time);
+function isExpiredBooking(booking) {
+  if (!booking?.date || !booking?.time) {
+    return false;
+  }
+
+  const bookingDuration = Number(booking.duration || APPOINTMENT_STEP_MINUTES);
+  const start = getBookingStartDateTime(booking.date, booking.time);
+  const end = new Date(start.getTime() + bookingDuration * 60 * 1000);
+  return end.getTime() <= Date.now();
+}
+
+function loadLocalFallbackBookings() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+    if (!Array.isArray(stored)) {
+      return [];
+    }
+
+    const cleaned = stored.filter((booking) => !isExpiredBooking(booking));
+
+    if (cleaned.length !== stored.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+    }
+
+    return cleaned;
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveLocalFallbackBookings(bookings) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+}
+
+function getLocalBookingsForDate(dateValue) {
+  return loadLocalFallbackBookings()
+    .filter((booking) => booking.date === dateValue)
+    .sort((first, second) => first.time.localeCompare(second.time));
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${BOOKING_API_BASE}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
   });
+
+  if (!response.ok) {
+    let message = "Something went wrong.";
+
+    try {
+      const payload = await response.json();
+      message = payload.error || message;
+    } catch (error) {
+      message = response.statusText || message;
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+async function loadBookingsForDate(dateValue) {
+  if (!dateValue) {
+    selectedDateBookings = [];
+    return;
+  }
+
+  try {
+    const payload = await apiRequest(`/.netlify/functions/availability?date=${encodeURIComponent(dateValue)}`);
+    bookingMode = "api";
+    selectedDateBookings = Array.isArray(payload.bookings) ? payload.bookings : [];
+  } catch (error) {
+    bookingMode = "local";
+    selectedDateBookings = getLocalBookingsForDate(dateValue);
+    setSlotMessage("Live booking service is unavailable right now, so this page is using local demo mode.", "error");
+  }
 }
 
 function setFeedback(message = "", type = "") {
@@ -152,12 +242,12 @@ function setSlotMessage(message = "", type = "") {
 }
 
 function renderSummary() {
-  const selectedServiceInput = serviceInputs.find((input) => input.checked);
-  summaryService.textContent = selectedServiceInput
-    ? `${selectedServiceInput.value} • ${selectedServiceInput.dataset.price}`
+  const selectedService = getSelectedServiceDetails();
+  summaryService.textContent = selectedService
+    ? `${selectedService.name} | ${selectedService.price}`
     : "Choose a haircut service";
-  summaryDuration.textContent = selectedServiceInput
-    ? formatDurationLabel(Number(selectedServiceInput.dataset.duration))
+  summaryDuration.textContent = selectedService
+    ? formatDurationLabel(selectedService.duration)
     : "Depends on the service";
 
   if (!dateInput.value) {
@@ -181,9 +271,7 @@ function renderDayBookings() {
     return;
   }
 
-  const entries = getBookingsForDate(dateInput.value);
-
-  if (entries.length === 0) {
+  if (selectedDateBookings.length === 0) {
     const emptyState = document.createElement("p");
     emptyState.className = "empty-state";
     emptyState.textContent = "No appointments booked yet for this date.";
@@ -191,17 +279,17 @@ function renderDayBookings() {
     return;
   }
 
-  entries.forEach((entry) => {
+  selectedDateBookings.forEach((entry) => {
     const item = document.createElement("div");
     item.className = "booking-chip";
 
     const time = document.createElement("strong");
-    time.textContent = formatTimeLabel(entry.time);
+    time.textContent = `${formatTimeLabel(entry.time)} - ${formatTimeLabel(entry.endTime)}`;
 
-    const name = document.createElement("span");
-    name.textContent = `${entry.name} • ${entry.service} • ${formatDurationLabel(entry.duration || 30)}`;
+    const details = document.createElement("span");
+    details.textContent = `${entry.name} | ${entry.service} | ${formatDurationLabel(entry.duration || 30)}`;
 
-    item.append(time, name);
+    item.append(time, details);
     dayBookings.appendChild(item);
   });
 }
@@ -211,6 +299,24 @@ function selectSlot(timeValue) {
   renderSlots();
   renderSummary();
   setFeedback("", "");
+}
+
+function getAvailableTimes() {
+  const selectedService = getSelectedServiceDetails();
+  const selectedDuration = selectedService ? selectedService.duration : APPOINTMENT_STEP_MINUTES;
+  const slotTimes = getSlotTimes(selectedDuration);
+
+  return slotTimes.filter((timeValue) => {
+    const candidateStart = timeValueToMinutes(timeValue);
+    const candidateEnd = candidateStart + selectedDuration;
+
+    return selectedDateBookings.every((entry) => {
+      const bookingStart = timeValueToMinutes(entry.time);
+      const bookingDuration = Number(entry.duration || APPOINTMENT_STEP_MINUTES);
+      const bookingEnd = bookingStart + bookingDuration;
+      return candidateEnd <= bookingStart || candidateStart >= bookingEnd;
+    });
+  });
 }
 
 function renderSlots() {
@@ -234,21 +340,10 @@ function renderSlots() {
     return;
   }
 
-  const slotTimes = getSlotTimes();
-  const selectedServiceInput = serviceInputs.find((input) => input.checked);
-  const selectedDuration = selectedServiceInput ? Number(selectedServiceInput.dataset.duration) : APPOINTMENT_LENGTH_MINUTES;
-  const existingBookings = getBookingsForDate(dateInput.value);
-  const availableTimes = slotTimes.filter((timeValue) => {
-    const candidateStart = timeValueToMinutes(timeValue);
-    const candidateEnd = candidateStart + selectedDuration;
-
-    return existingBookings.every((entry) => {
-      const bookingStart = timeValueToMinutes(entry.time);
-      const bookingDuration = Number(entry.duration || 30);
-      const bookingEnd = bookingStart + bookingDuration;
-      return candidateEnd <= bookingStart || candidateStart >= bookingEnd;
-    });
-  });
+  const selectedService = getSelectedServiceDetails();
+  const selectedDuration = selectedService ? selectedService.duration : APPOINTMENT_STEP_MINUTES;
+  const slotTimes = getSlotTimes(selectedDuration);
+  const availableTimes = getAvailableTimes();
   const availableTimeSet = new Set(availableTimes);
   const remainingCount = availableTimes.length;
 
@@ -279,8 +374,12 @@ function renderSlots() {
   if (remainingCount === 0) {
     selectedTime = "";
     setSlotMessage("No start times fit this service on that date. Please choose another date or service.", "error");
+  } else if (bookingMode === "api") {
+    setSlotMessage(`Select one available start time for this ${formatDurationLabel(selectedDuration).toLowerCase()} service. Live booking mode is on.`, "success");
+  } else if (bookingMode === "local") {
+    setSlotMessage(`Select one available start time for this ${formatDurationLabel(selectedDuration).toLowerCase()} service. Demo mode is active until the live booking backend is connected.`, "error");
   } else {
-    setSlotMessage(`Select one available start time for this ${formatDurationLabel(selectedDuration).toLowerCase()} service.`, "success");
+    setSlotMessage("Loading available appointment times.", "");
   }
 
   renderSummary();
@@ -308,14 +407,25 @@ function initializeDateInput() {
   dateInput.value = toDateInputValue(nextWeekday);
 }
 
-dateInput.addEventListener("change", () => {
+async function refreshAvailability() {
+  if (!dateInput.value) {
+    selectedDateBookings = [];
+    renderSlots();
+    return;
+  }
+
+  await loadBookingsForDate(dateInput.value);
+  renderSlots();
+}
+
+dateInput.addEventListener("change", async () => {
   selectedTime = "";
   setFeedback("", "");
   moveWeekendSelectionToWeekday();
-  renderSlots();
+  await refreshAvailability();
 });
 
-bookingForm.addEventListener("submit", (event) => {
+bookingForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!dateInput.value) {
@@ -335,9 +445,9 @@ bookingForm.addEventListener("submit", (event) => {
     return;
   }
 
-  const selectedServiceInput = serviceInputs.find((input) => input.checked);
+  const selectedService = getSelectedServiceDetails();
 
-  if (!selectedServiceInput) {
+  if (!selectedService) {
     setFeedback("Choose a haircut service before confirming the booking.", "error");
     return;
   }
@@ -347,45 +457,55 @@ bookingForm.addEventListener("submit", (event) => {
     return;
   }
 
-  const existingBookings = getBookingsForDate(dateInput.value);
-  const alreadyTaken = existingBookings.some((entry) => entry.time === selectedTime);
-
-  if (alreadyTaken) {
-    selectedTime = "";
-    renderSlots();
-    setFeedback("That time was just taken. Please choose another slot.", "error");
-    return;
-  }
-
-  const newBooking = {
+  const endTime = minutesToTimeValue(timeValueToMinutes(selectedTime) + selectedService.duration);
+  const bookingPayload = {
+    date: dateInput.value,
     time: selectedTime,
-    endTime: minutesToTimeValue(timeValueToMinutes(selectedTime) + Number(selectedServiceInput.dataset.duration)),
-    service: selectedServiceInput.value,
-    price: selectedServiceInput.dataset.price,
-    duration: Number(selectedServiceInput.dataset.duration),
+    endTime,
+    service: selectedService.name,
+    price: selectedService.price,
+    duration: selectedService.duration,
     name: nameInput.value.trim(),
     email: emailInput.value.trim(),
     phone: phoneInput.value.trim(),
     notes: notesInput.value.trim(),
-    bookedAt: new Date().toISOString(),
   };
 
-  bookings[dateInput.value] = [...existingBookings, newBooking];
-  sortBookingsForDate(dateInput.value);
-  saveBookings();
+  const button = bookingForm.querySelector('button[type="submit"]');
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Saving booking...";
 
-  const confirmationTime = selectedTime;
-  selectedTime = "";
-  bookingForm.reset();
-  initializeDateInput();
-  dateInput.value = toDateInputValue(chosenDate);
+  try {
+    if (bookingMode === "api") {
+      await apiRequest("/.netlify/functions/bookings", {
+        method: "POST",
+        body: JSON.stringify(bookingPayload),
+      });
+    } else {
+      const existingBookings = loadLocalFallbackBookings();
+      existingBookings.push({
+        ...bookingPayload,
+        bookedAt: new Date().toISOString(),
+      });
+      saveLocalFallbackBookings(existingBookings);
+    }
 
-  renderSlots();
-  renderSummary();
-  setFeedback(
-    `Booked ${selectedServiceInput.value} for ${formatDateLabel(chosenDate)} at ${formatTimeLabel(confirmationTime)}.`,
-    "success"
-  );
+    const confirmationTime = selectedTime;
+    selectedTime = "";
+    bookingForm.reset();
+    setFeedback(
+      `Booked ${selectedService.name} for ${formatDateLabel(chosenDate)} at ${formatTimeLabel(confirmationTime)}.`,
+      "success"
+    );
+    await refreshAvailability();
+  } catch (error) {
+    setFeedback(error.message || "Unable to save the booking right now.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+    renderSummary();
+  }
 });
 
 serviceInputs.forEach((input) => {
@@ -398,5 +518,4 @@ serviceInputs.forEach((input) => {
 });
 
 initializeDateInput();
-renderSlots();
-renderSummary();
+refreshAvailability();
