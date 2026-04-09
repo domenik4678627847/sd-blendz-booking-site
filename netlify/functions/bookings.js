@@ -61,12 +61,16 @@ exports.handler = async (event) => {
     const { client: resendClient, fromEmail, notifyEmail } = getResendClient();
     const email = formatNotificationEmail(payload);
 
-    await resendClient.emails.send({
+    const emailResult = await resendClient.emails.send({
       from: fromEmail,
       to: notifyEmail,
       subject: email.subject,
       html: email.html,
     });
+
+    if (emailResult?.error) {
+      throw new Error(emailResult.error.message || "Email notification failed.");
+    }
 
     return json(201, { success: true });
   } catch (error) {
