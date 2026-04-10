@@ -33,15 +33,32 @@
     <header class="hero">
       <div class="hero-copy">
         <p class="eyebrow">S&amp;D Blendz</p>
-        <h1>Calgary cuts with a darker, cleaner booking experience.</h1>
+        <h1>Calgary fades, clean lineups, and a booking page that feels as sharp as the cut.</h1>
         <p class="hero-text">
-          S&amp;D Blendz brings Calgary clients a sleek black barber booking experience with clear pricing and easy evening appointments.
-          Clients can choose their haircut style first, then lock in a weekday appointment in 30-minute blocks.
+          S&amp;D Blendz brings Calgary clients a premium barber experience with evening availability, bold service choices, and a smooth booking flow built around real haircut timing.
         </p>
         <div class="hero-tags" aria-label="Booking details">
           <span>Mon-Fri</span>
           <span>30 Minutes</span>
           <span>4:00 PM-8:30 PM</span>
+        </div>
+        <div class="hero-actions">
+          <a class="hero-button hero-button-primary" href="#booking">Book your cut</a>
+          <a class="hero-button hero-button-secondary" href="#experience">See the experience</a>
+        </div>
+        <div class="hero-highlights">
+          <div class="highlight-card">
+            <span class="highlight-number">30 / 45</span>
+            <span class="highlight-label">Minute service lengths</span>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-number">Calgary</span>
+            <span class="highlight-label">Local booking focus</span>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-number">Evenings</span>
+            <span class="highlight-label">Built around after-school and after-work cuts</span>
+          </div>
         </div>
       </div>
 
@@ -65,14 +82,47 @@
             <strong id="summary-duration">Depends on the service</strong>
           </div>
         </div>
+        <div class="hero-card-note">
+          <p>Precision appointments for fades, beard work, combo cuts, and custom styles.</p>
+        </div>
       </aside>
     </header>
 
-    <main class="main-grid">
+    <section id="experience" class="experience-grid">
+      <article class="experience-panel experience-panel-large">
+        <p class="eyebrow">The vibe</p>
+        <h2>Luxury dark tones, precise work, and a barbershop feel that stands out online.</h2>
+        <p class="section-copy">
+          This booking page is built to feel more premium from the first click. The goal is simple:
+          make the brand feel clean, confident, and local before the client even sits in the chair.
+        </p>
+      </article>
+      <article class="experience-panel">
+        <p class="eyebrow">Why clients book</p>
+        <ul class="experience-list">
+          <li>Evening weekday booking that fits real schedules</li>
+          <li>Service-specific timing so longer cuts block enough time</li>
+          <li>Clean pricing up front with no guesswork</li>
+        </ul>
+      </article>
+      <article class="experience-panel">
+        <p class="eyebrow">Signature look</p>
+        <div class="mood-grid">
+          <div class="mood-tile mood-tile-one"><span>Fade detail</span></div>
+          <div class="mood-tile mood-tile-two"><span>Sharp lineups</span></div>
+          <div class="mood-tile mood-tile-three"><span>Calgary style</span></div>
+        </div>
+      </article>
+    </section>
+
+    <main id="booking" class="main-grid">
       <section class="booking-panel">
         <div class="section-heading">
           <p class="eyebrow">Book an appointment</p>
           <h2>Reserve your chair</h2>
+          <p class="section-copy">
+            Pick the service first, choose a weekday, and book the time that fits. Longer styles automatically take more room in the schedule.
+          </p>
         </div>
 
         <form id="booking-form" class="booking-form" novalidate>
@@ -200,6 +250,25 @@
         </section>
 
         <section class="info-card">
+          <p class="eyebrow">Brand details</p>
+          <h3>What makes the page feel premium</h3>
+          <div class="brand-points">
+            <div class="brand-point">
+              <strong>Built for Calgary clients</strong>
+              <span>Local-focused wording helps the brand feel more real and more searchable.</span>
+            </div>
+            <div class="brand-point">
+              <strong>Designed around precision</strong>
+              <span>Service timing, bold styling, and cleaner spacing all support a higher-end feel.</span>
+            </div>
+            <div class="brand-point">
+              <strong>Ready to grow</strong>
+              <span>This can expand into photos, reviews, Instagram, and a custom domain next.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="info-card">
           <p class="eyebrow">Hours and rules</p>
           <h3>How this booking flow works</h3>
           <ul class="rule-list">
@@ -220,14 +289,23 @@
         </section>
 
         <section class="info-card info-card-soft">
-          <p class="eyebrow">Important note</p>
+          <p class="eyebrow">Next upgrades</p>
           <p class="note-text">
-            This first version saves bookings in the browser using local storage. It works well for a demo
-            or single-device setup. For a real public site, we can connect it to a shared database next.
+            The page can grow from here with haircut photos, Instagram links, a real logo, reviews, and a custom domain that looks more professional than a default hosting URL.
           </p>
         </section>
       </aside>
     </main>
+
+    <footer class="site-footer">
+      <div>
+        <p class="eyebrow">S&amp;D Blendz</p>
+        <h3>Calgary Barbershop Booking</h3>
+      </div>
+      <p class="footer-copy">
+        Fades, beard work, detailed designs, and clean evening booking for Calgary clients.
+      </p>
+    </footer>
   </div>
 
   <script src="script.js"></script>
