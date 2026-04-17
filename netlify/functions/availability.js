@@ -10,10 +10,8 @@ exports.handler = async (event) => {
   }
 
   const date = event.queryStringParameters?.date;
-  const barber = event.queryStringParameters?.barber;
-
-  if (!date || !barber) {
-    return json(400, { error: "Date and barber query parameters are required." });
+  if (!date) {
+    return json(400, { error: "A date query parameter is required." });
   }
 
   try {
@@ -41,7 +39,6 @@ exports.handler = async (event) => {
         time: row.start_time.slice(0, 5),
         endTime: row.end_time.slice(0, 5),
       }))
-      .filter((booking) => booking.barber === barber)
       .filter((booking) => {
         const end = new Date(`${booking.date}T${booking.endTime}:00`);
         return end.getTime() > now.getTime();

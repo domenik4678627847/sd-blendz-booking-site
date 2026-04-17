@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       date: row.appointment_date,
       time: row.start_time.slice(0, 5),
       duration: row.duration_minutes,
-    })).filter((booking) => booking.barber === payload.barber);
+    }));
 
     if (overlapExists(activeBookings, payload)) {
       return json(409, { error: "That appointment time is no longer available." });

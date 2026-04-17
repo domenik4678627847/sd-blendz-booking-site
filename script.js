@@ -235,14 +235,12 @@ async function loadBookingsForDate(dateValue) {
   }
 
   try {
-    const payload = await apiRequest(
-      `/.netlify/functions/availability?date=${encodeURIComponent(dateValue)}&barber=${encodeURIComponent(selectedBarber)}`
-    );
+    const payload = await apiRequest(`/.netlify/functions/availability?date=${encodeURIComponent(dateValue)}`);
     bookingMode = "api";
     selectedDateBookings = Array.isArray(payload.bookings) ? payload.bookings : [];
   } catch (error) {
     bookingMode = "local";
-    selectedDateBookings = getLocalBookingsForDate(dateValue).filter((booking) => booking.barber === selectedBarber);
+    selectedDateBookings = getLocalBookingsForDate(dateValue);
     setSlotMessage("Live booking service is unavailable right now, so this page is using local demo mode.", "error");
   }
 }
@@ -399,7 +397,7 @@ function renderSlots() {
   const availableTimeSet = new Set(availableTimes);
   const remainingCount = availableTimes.length;
 
-  slotsSubtitle.textContent = `${remainingCount} slot${remainingCount === 1 ? "" : "s"} open for ${selectedBarber} on ${formatDateLabel(selectedDate)}.`;
+  slotsSubtitle.textContent = `${remainingCount} slot${remainingCount === 1 ? "" : "s"} open on ${formatDateLabel(selectedDate)}.`;
 
   slotTimes.forEach((timeValue) => {
     const button = document.createElement("button");
@@ -425,11 +423,11 @@ function renderSlots() {
 
   if (remainingCount === 0) {
     selectedTime = "";
-    setSlotMessage("No start times fit this service on that date. Please choose another date or service.", "error");
+    setSlotMessage("That hour is already taken. Please choose another date or time.", "error");
   } else if (bookingMode === "api") {
-    setSlotMessage(`Select one available start time for ${selectedBarber}. This ${formatDurationLabel(selectedDuration).toLowerCase()} service is in live booking mode.`, "success");
+    setSlotMessage(`Select one available start time. This ${formatDurationLabel(selectedDuration).toLowerCase()} service is in live booking mode.`, "success");
   } else if (bookingMode === "local") {
-    setSlotMessage(`Select one available start time for ${selectedBarber}. Demo mode is active until the live booking backend is connected.`, "error");
+    setSlotMessage(`Select one available start time. Demo mode is active until the live booking backend is connected.`, "error");
   } else {
     setSlotMessage("Choose your barber to load available appointment times.", "");
   }
