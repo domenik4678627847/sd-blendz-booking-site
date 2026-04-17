@@ -1,4 +1,4 @@
-const { getSupabaseClient, json } = require("./_shared");
+const { getSupabaseClient, json, parseStoredNotes } = require("./_shared");
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
@@ -10,16 +10,17 @@ exports.handler = async (event) => {
   }
 
   const date = event.queryStringParameters?.date;
+  const barber = event.queryStringParameters?.barber;
 
-  if (!date) {
-    return json(400, { error: "A date query parameter is required." });
+  if (!date || !barber) {
+    return json(400, { error: "Date and barber query parameters are required." });
   }
 
   try {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from("bookings")
-      .select("customer_name, service, price, duration_minutes, appointment_date, start_time, end_time")
+      .select("customer_name, service, price, duration_minutes, appointment_date, start_time, end_time, notes")
       .eq("appointment_date", date)
       .gte("end_time", "00:00:00")
       .order("start_time", { ascending: true });
@@ -31,6 +32,7 @@ exports.handler = async (event) => {
     const now = new Date();
     const bookings = (data || [])
       .map((row) => ({
+        barber: parseStoredNotes(row.notes).barber,
         name: row.customer_name,
         service: row.service,
         price: row.price,
@@ -39,6 +41,7 @@ exports.handler = async (event) => {
         time: row.start_time.slice(0, 5),
         endTime: row.end_time.slice(0, 5),
       }))
+      .filter((booking) => booking.barber === barber)
       .filter((booking) => {
         const end = new Date(`${booking.date}T${booking.endTime}:00`);
         return end.getTime() > now.getTime();
@@ -49,4 +52,3 @@ exports.handler = async (event) => {
     return json(500, { error: error.message || "Unable to load bookings." });
   }
 };
-

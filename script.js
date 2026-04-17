@@ -16,6 +16,7 @@ const SERVICE_DEFINITIONS = {
   "Cut + Beard Combo": { price: "$20", duration: 60 },
   "Other Custom Style": { price: "$20", duration: 60 },
 };
+const BARBER_OPTIONS = ["William", "Domenik"];
 
 const dateInput = document.querySelector("#appointment-date");
 const slotsGrid = document.querySelector("#slots-grid");
@@ -24,11 +25,13 @@ const slotsSubtitle = document.querySelector("#slots-subtitle");
 const bookingForm = document.querySelector("#booking-form");
 const feedback = document.querySelector("#form-feedback");
 const dayBookings = document.querySelector("#day-bookings");
+const summaryBarber = document.querySelector("#summary-barber");
 const summaryDate = document.querySelector("#summary-date");
 const summaryTime = document.querySelector("#summary-time");
 const summaryService = document.querySelector("#summary-service");
 const summaryDuration = document.querySelector("#summary-duration");
 const serviceInputs = Array.from(document.querySelectorAll('input[name="service-type"]'));
+const barberInputs = Array.from(document.querySelectorAll('input[name="barber-name"]'));
 
 const nameInput = document.querySelector("#client-name");
 const emailInput = document.querySelector("#client-email");
@@ -71,6 +74,10 @@ function getSelectedServiceInput() {
   return serviceInputs.find((input) => input.checked) || null;
 }
 
+function getSelectedBarberInput() {
+  return barberInputs.find((input) => input.checked) || null;
+}
+
 function getSelectedServiceDetails() {
   const selectedServiceInput = getSelectedServiceInput();
 
@@ -83,6 +90,10 @@ function getSelectedServiceDetails() {
     price: selectedServiceInput.dataset.price,
     duration: Number(selectedServiceInput.dataset.duration),
   };
+}
+
+function getSelectedBarber() {
+  return getSelectedBarberInput()?.value || "";
 }
 
 function getSlotTimes(selectedDuration = APPOINTMENT_STEP_MINUTES) {
@@ -212,13 +223,23 @@ async function loadBookingsForDate(dateValue) {
     return;
   }
 
+  const selectedBarber = getSelectedBarber();
+
+  if (!selectedBarber) {
+    selectedDateBookings = [];
+    bookingMode = "loading";
+    return;
+  }
+
   try {
-    const payload = await apiRequest(`/.netlify/functions/availability?date=${encodeURIComponent(dateValue)}`);
+    const payload = await apiRequest(
+      `/.netlify/functions/availability?date=${encodeURIComponent(dateValue)}&barber=${encodeURIComponent(selectedBarber)}`
+    );
     bookingMode = "api";
     selectedDateBookings = Array.isArray(payload.bookings) ? payload.bookings : [];
   } catch (error) {
     bookingMode = "local";
-    selectedDateBookings = getLocalBookingsForDate(dateValue);
+    selectedDateBookings = getLocalBookingsForDate(dateValue).filter((booking) => booking.barber === selectedBarber);
     setSlotMessage("Live booking service is unavailable right now, so this page is using local demo mode.", "error");
   }
 }
@@ -242,6 +263,9 @@ function setSlotMessage(message = "", type = "") {
 }
 
 function renderSummary() {
+  const selectedBarber = getSelectedBarber();
+  summaryBarber.textContent = selectedBarber || "Choose your barber";
+
   const selectedService = getSelectedServiceDetails();
   summaryService.textContent = selectedService
     ? `${selectedService.name} | ${selectedService.price}`
@@ -287,7 +311,7 @@ function renderDayBookings() {
     time.textContent = `${formatTimeLabel(entry.time)} - ${formatTimeLabel(entry.endTime)}`;
 
     const details = document.createElement("span");
-    details.textContent = `${entry.name} | ${entry.service} | ${formatDurationLabel(entry.duration || 60)}`;
+    details.textContent = `${entry.barber || "Barber"} | ${entry.name} | ${entry.service} | ${formatDurationLabel(entry.duration || 60)}`;
 
     item.append(time, details);
     dayBookings.appendChild(item);
@@ -331,10 +355,19 @@ function renderSlots() {
   }
 
   const selectedDate = fromDateInputValue(dateInput.value);
+  const selectedBarber = getSelectedBarber();
 
   if (!isWeekday(selectedDate)) {
     slotsSubtitle.textContent = "Weekend dates are unavailable.";
     setSlotMessage("Please pick a Monday to Friday date.", "error");
+    renderSummary();
+    renderDayBookings();
+    return;
+  }
+
+  if (!selectedBarber) {
+    slotsSubtitle.textContent = "Choose a barber to load that schedule.";
+    setSlotMessage("Pick William or Domenik before choosing a time.", "error");
     renderSummary();
     renderDayBookings();
     return;
@@ -347,7 +380,7 @@ function renderSlots() {
   const availableTimeSet = new Set(availableTimes);
   const remainingCount = availableTimes.length;
 
-  slotsSubtitle.textContent = `${remainingCount} slot${remainingCount === 1 ? "" : "s"} open on ${formatDateLabel(selectedDate)}.`;
+  slotsSubtitle.textContent = `${remainingCount} slot${remainingCount === 1 ? "" : "s"} open for ${selectedBarber} on ${formatDateLabel(selectedDate)}.`;
 
   slotTimes.forEach((timeValue) => {
     const button = document.createElement("button");
@@ -375,11 +408,11 @@ function renderSlots() {
     selectedTime = "";
     setSlotMessage("No start times fit this service on that date. Please choose another date or service.", "error");
   } else if (bookingMode === "api") {
-    setSlotMessage(`Select one available start time for this ${formatDurationLabel(selectedDuration).toLowerCase()} service. Live booking mode is on.`, "success");
+    setSlotMessage(`Select one available start time for ${selectedBarber}. This ${formatDurationLabel(selectedDuration).toLowerCase()} service is in live booking mode.`, "success");
   } else if (bookingMode === "local") {
-    setSlotMessage(`Select one available start time for this ${formatDurationLabel(selectedDuration).toLowerCase()} service. Demo mode is active until the live booking backend is connected.`, "error");
+    setSlotMessage(`Select one available start time for ${selectedBarber}. Demo mode is active until the live booking backend is connected.`, "error");
   } else {
-    setSlotMessage("Loading available appointment times.", "");
+    setSlotMessage("Choose your barber to load available appointment times.", "");
   }
 
   renderSummary();
@@ -446,9 +479,15 @@ bookingForm.addEventListener("submit", async (event) => {
   }
 
   const selectedService = getSelectedServiceDetails();
+  const selectedBarber = getSelectedBarber();
 
   if (!selectedService) {
     setFeedback("Choose a haircut service before confirming the booking.", "error");
+    return;
+  }
+
+  if (!selectedBarber) {
+    setFeedback("Choose William or Domenik before confirming the booking.", "error");
     return;
   }
 
@@ -462,6 +501,7 @@ bookingForm.addEventListener("submit", async (event) => {
     date: dateInput.value,
     time: selectedTime,
     endTime,
+    barber: selectedBarber,
     service: selectedService.name,
     price: selectedService.price,
     duration: selectedService.duration,
@@ -495,7 +535,7 @@ bookingForm.addEventListener("submit", async (event) => {
     selectedTime = "";
     bookingForm.reset();
     setFeedback(
-      `Booked ${selectedService.name} for ${formatDateLabel(chosenDate)} at ${formatTimeLabel(confirmationTime)}.`,
+      `Booked ${selectedService.name} with ${selectedBarber} for ${formatDateLabel(chosenDate)} at ${formatTimeLabel(confirmationTime)}.`,
       "success"
     );
     await refreshAvailability();
@@ -506,6 +546,15 @@ bookingForm.addEventListener("submit", async (event) => {
     button.textContent = originalLabel;
     renderSummary();
   }
+});
+
+barberInputs.forEach((input) => {
+  input.addEventListener("change", async () => {
+    selectedTime = "";
+    setFeedback("", "");
+    await refreshAvailability();
+    renderSummary();
+  });
 });
 
 serviceInputs.forEach((input) => {

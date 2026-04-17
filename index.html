@@ -16,10 +16,10 @@
     content="Book barber appointments with S&amp;D Blendz in Calgary and choose your haircut style online."
   >
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://domenik4678627847.github.io/sd-blendz-booking-site/">
+  <meta property="og:url" content="https://sdblendz.netlify.app/">
   <meta name="google-site-verification" content="kElroVMtqiyTKge_x__hpZRhCJ24RAI3GbAua66eBdw">
   <meta name="theme-color" content="#050505">
-  <link rel="canonical" href="https://domenik4678627847.github.io/sd-blendz-booking-site/">
+  <link rel="canonical" href="https://sdblendz.netlify.app/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -48,8 +48,8 @@
         </div>
         <div class="hero-highlights">
           <div class="highlight-card">
-            <span class="highlight-number">30 / 45</span>
-            <span class="highlight-label">Minute service lengths</span>
+            <span class="highlight-number">William + Domenik</span>
+            <span class="highlight-label">Book with the barber you want</span>
           </div>
           <div class="highlight-card">
             <span class="highlight-number">Calgary</span>
@@ -65,6 +65,10 @@
       <aside class="hero-card">
         <p class="card-label">Booking snapshot</p>
         <div class="summary-stack">
+          <div>
+            <span class="summary-title">Selected barber</span>
+            <strong id="summary-barber">Choose your barber</strong>
+          </div>
           <div>
             <span class="summary-title">Selected service</span>
             <strong id="summary-service">Choose a haircut service</strong>
@@ -115,17 +119,103 @@
       </article>
     </section>
 
+    <section id="work" class="work-section">
+      <div class="section-heading section-heading-wide">
+        <p class="eyebrow">View my work</p>
+        <h2>Real cuts, real detail, real texture.</h2>
+        <p class="section-copy">
+          A quick look at the kind of fades, detail work, and finish you can expect when booking with S&amp;D Blendz.
+        </p>
+      </div>
+      <div class="work-grid">
+        <article class="work-card work-card-video">
+          <video autoplay muted loop playsinline controls preload="metadata" poster="">
+            <source src="assets/work/bnaj1201.mov" type="video/quicktime">
+          </video>
+          <div class="work-card-copy">
+            <strong>Precision finish</strong>
+            <span>Clean blend and finished texture.</span>
+          </div>
+        </article>
+        <article class="work-card work-card-video">
+          <video autoplay muted loop playsinline controls preload="metadata">
+            <source src="assets/work/img4211.mov" type="video/quicktime">
+          </video>
+          <div class="work-card-copy">
+            <strong>Close-up fade work</strong>
+            <span>Sharper detail and heavier visual contrast.</span>
+          </div>
+        </article>
+        <article class="work-card work-card-video">
+          <video autoplay muted loop playsinline controls preload="metadata">
+            <source src="assets/work/njuh8664.mov" type="video/quicktime">
+          </video>
+          <div class="work-card-copy">
+            <strong>Detail pass</strong>
+            <span>Polished edges with a crisp finish.</span>
+          </div>
+        </article>
+        <article class="work-card work-card-video">
+          <video autoplay muted loop playsinline controls preload="metadata">
+            <source src="assets/work/uxov3361.mov" type="video/quicktime">
+          </video>
+          <div class="work-card-copy">
+            <strong>Blend check</strong>
+            <span>Balanced taper work from every angle.</span>
+          </div>
+        </article>
+        <article class="work-card work-card-video">
+          <video autoplay muted loop playsinline controls preload="metadata">
+            <source src="assets/work/mjww0012.mov" type="video/quicktime">
+          </video>
+          <div class="work-card-copy">
+            <strong>Fresh lineup</strong>
+            <span>Neat shape-up and clean finishing pass.</span>
+          </div>
+        </article>
+        <article class="work-card work-card-photo-link">
+          <a href="assets/work/img4204.heic" target="_blank" rel="noreferrer">
+            <span class="photo-link-label">Photo still</span>
+            <strong>Open haircut photo</strong>
+            <span>Tap to view the uploaded photo file directly.</span>
+          </a>
+        </article>
+      </div>
+    </section>
+
     <main id="booking" class="main-grid">
       <section class="booking-panel">
         <div class="section-heading">
           <p class="eyebrow">Book an appointment</p>
           <h2>Reserve your chair</h2>
           <p class="section-copy">
-            Pick the service first, choose a weekday, and book the time that fits. Longer styles automatically take more room in the schedule.
+            Pick your barber first, choose the service, and lock in the hour that fits your schedule.
           </p>
         </div>
 
         <form id="booking-form" class="booking-form" novalidate>
+          <div class="barbers-panel">
+            <div class="slots-header">
+              <div>
+                <span class="field-label">Choose your barber</span>
+                <p>Pick whether you want to book with William or Domenik before choosing your time.</p>
+              </div>
+              <span class="pill">2 barbers available</span>
+            </div>
+            <div class="barber-options" role="radiogroup" aria-label="Barber choices">
+              <label class="barber-card">
+                <input type="radio" name="barber-name" value="William" required>
+                <span class="barber-name">William</span>
+                <span class="barber-copy">Book this hour slot directly with William.</span>
+              </label>
+              <label class="barber-card">
+                <input type="radio" name="barber-name" value="Domenik">
+                <span class="barber-name">Domenik</span>
+                <span class="barber-copy">Book this hour slot directly with Domenik.</span>
+              </label>
+            </div>
+          </div>
+
           <div class="services-panel">
             <div class="slots-header">
               <div>
@@ -262,8 +352,8 @@
               <span>Service timing, bold styling, and cleaner spacing all support a higher-end feel.</span>
             </div>
             <div class="brand-point">
-              <strong>Ready to grow</strong>
-              <span>This can expand into photos, reviews, Instagram, and a custom domain next.</span>
+              <strong>Two barbers, one booking flow</strong>
+              <span>Clients can choose either William or Domenik before locking in their hour.</span>
             </div>
           </div>
         </section>

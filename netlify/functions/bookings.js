@@ -1,9 +1,11 @@
 const {
+  buildStoredNotes,
   formatNotificationEmail,
   getResendClient,
   getSupabaseClient,
   json,
   overlapExists,
+  parseStoredNotes,
   parseBody,
   validateBooking,
 } = require("./_shared");
@@ -23,7 +25,7 @@ exports.handler = async (event) => {
 
     const { data: existingRows, error: existingError } = await supabase
       .from("bookings")
-      .select("appointment_date, start_time, duration_minutes")
+      .select("appointment_date, start_time, duration_minutes, notes")
       .eq("appointment_date", payload.date)
       .order("start_time", { ascending: true });
 
@@ -32,10 +34,11 @@ exports.handler = async (event) => {
     }
 
     const activeBookings = (existingRows || []).map((row) => ({
+      barber: parseStoredNotes(row.notes).barber,
       date: row.appointment_date,
       time: row.start_time.slice(0, 5),
       duration: row.duration_minutes,
-    }));
+    })).filter((booking) => booking.barber === payload.barber);
 
     if (overlapExists(activeBookings, payload)) {
       return json(409, { error: "That appointment time is no longer available." });
@@ -51,7 +54,7 @@ exports.handler = async (event) => {
       appointment_date: payload.date,
       start_time: `${payload.time}:00`,
       end_time: `${payload.endTime}:00`,
-      notes: payload.notes || null,
+      notes: buildStoredNotes(payload.barber, payload.notes),
     });
 
     if (insertError) {
