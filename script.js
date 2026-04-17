@@ -30,6 +30,9 @@ const summaryDate = document.querySelector("#summary-date");
 const summaryTime = document.querySelector("#summary-time");
 const summaryService = document.querySelector("#summary-service");
 const summaryDuration = document.querySelector("#summary-duration");
+const confirmationCard = document.querySelector("#confirmation-card");
+const confirmationTitle = document.querySelector("#confirmation-title");
+const confirmationCopy = document.querySelector("#confirmation-copy");
 const serviceInputs = Array.from(document.querySelectorAll('input[name="service-type"]'));
 const barberInputs = Array.from(document.querySelectorAll('input[name="barber-name"]'));
 
@@ -253,6 +256,22 @@ function setFeedback(message = "", type = "") {
   }
 }
 
+function hideConfirmationCard() {
+  if (confirmationCard) {
+    confirmationCard.hidden = true;
+  }
+}
+
+function showConfirmationCard(title, copy) {
+  if (!confirmationCard) {
+    return;
+  }
+
+  confirmationTitle.textContent = title;
+  confirmationCopy.textContent = copy;
+  confirmationCard.hidden = false;
+}
+
 function setSlotMessage(message = "", type = "") {
   slotMessage.textContent = message;
   slotMessage.className = "slot-message";
@@ -454,6 +473,7 @@ async function refreshAvailability() {
 dateInput.addEventListener("change", async () => {
   selectedTime = "";
   setFeedback("", "");
+  hideConfirmationCard();
   moveWeekendSelectionToWeekday();
   await refreshAvailability();
 });
@@ -515,6 +535,7 @@ bookingForm.addEventListener("submit", async (event) => {
   const originalLabel = button.textContent;
   button.disabled = true;
   button.textContent = "Saving booking...";
+  hideConfirmationCard();
 
   try {
     if (bookingMode === "api") {
@@ -538,6 +559,10 @@ bookingForm.addEventListener("submit", async (event) => {
       `Booked ${selectedService.name} with ${selectedBarber} for ${formatDateLabel(chosenDate)} at ${formatTimeLabel(confirmationTime)}.`,
       "success"
     );
+    showConfirmationCard(
+      `${selectedBarber} is booked for ${formatTimeLabel(confirmationTime)}.`,
+      `${selectedService.name} is locked in for ${formatDateLabel(chosenDate)}. If booking email notifications are active, the appointment notice has been sent too.`
+    );
     await refreshAvailability();
   } catch (error) {
     setFeedback(error.message || "Unable to save the booking right now.", "error");
@@ -552,6 +577,7 @@ barberInputs.forEach((input) => {
   input.addEventListener("change", async () => {
     selectedTime = "";
     setFeedback("", "");
+    hideConfirmationCard();
     await refreshAvailability();
     renderSummary();
   });
@@ -563,6 +589,7 @@ serviceInputs.forEach((input) => {
     renderSlots();
     renderSummary();
     setFeedback("", "");
+    hideConfirmationCard();
   });
 });
 

@@ -127,8 +127,34 @@
           A quick look at the kind of fades, detail work, and finish you can expect when booking with S&amp;D Blendz.
         </p>
       </div>
+      <div class="barber-spotlight-grid">
+        <article class="barber-spotlight">
+          <p class="eyebrow">Featured barber</p>
+          <h3>William</h3>
+          <p class="section-copy">
+            Clean structure, sharp finish work, and a confident look that feels polished the moment the cut is done.
+          </p>
+          <div class="spotlight-tags">
+            <span>Fades</span>
+            <span>Lineups</span>
+            <span>Detail work</span>
+          </div>
+        </article>
+        <article class="barber-spotlight">
+          <p class="eyebrow">Featured barber</p>
+          <h3>Domenik</h3>
+          <p class="section-copy">
+            Built around evening bookings, smooth blends, and a booking experience that feels just as clean as the final result.
+          </p>
+          <div class="spotlight-tags">
+            <span>Blends</span>
+            <span>Texture</span>
+            <span>Finishing</span>
+          </div>
+        </article>
+      </div>
       <div class="work-grid">
-        <article class="work-card work-card-video">
+        <article class="work-card work-card-video work-card-featured">
           <video autoplay muted loop playsinline controls preload="metadata" poster="">
             <source src="assets/work/bnaj1201.mov" type="video/quicktime">
           </video>
@@ -137,7 +163,7 @@
             <span>Clean blend and finished texture.</span>
           </div>
         </article>
-        <article class="work-card work-card-video">
+        <article class="work-card work-card-video work-card-featured">
           <video autoplay muted loop playsinline controls preload="metadata">
             <source src="assets/work/img4211.mov" type="video/quicktime">
           </video>
@@ -322,6 +348,13 @@
 
           <button class="book-button" type="submit">Confirm booking</button>
           <p id="form-feedback" class="form-feedback" aria-live="polite"></p>
+          <div id="confirmation-card" class="confirmation-card" hidden>
+            <p class="eyebrow">Booking confirmed</p>
+            <h3 id="confirmation-title">Your chair is reserved.</h3>
+            <p id="confirmation-copy" class="section-copy">
+              We saved your booking details and locked in your barber and time.
+            </p>
+          </div>
         </form>
       </section>
 
