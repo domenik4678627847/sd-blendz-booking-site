@@ -1,20 +1,20 @@
-const APPOINTMENT_STEP_MINUTES = 30;
+const APPOINTMENT_STEP_MINUTES = 60;
 const STORAGE_KEY = "sd-blendz-bookings-local-fallback-v1";
 const BOOKING_API_BASE = window.BOOKING_API_BASE || "";
 const SCHEDULE = {
   openingHour: 16,
   openingMinute: 0,
-  closingHour: 20,
-  closingMinute: 30,
+  closingHour: 21,
+  closingMinute: 0,
 };
 
 const SERVICE_DEFINITIONS = {
-  "Classic Fade": { price: "$30", duration: 30 },
-  "Fade + Design": { price: "$35", duration: 30 },
-  "Buzz Cut": { price: "$30", duration: 30 },
-  "Beard Trim + Lineup": { price: "$35", duration: 30 },
-  "Cut + Beard Combo": { price: "$30", duration: 45 },
-  "Other Custom Style": { price: "$30", duration: 45 },
+  "Classic Fade": { price: "$20", duration: 60 },
+  "Fade + Design": { price: "$20", duration: 60 },
+  "Buzz Cut": { price: "$20", duration: 60 },
+  "Beard Trim + Lineup": { price: "$20", duration: 60 },
+  "Cut + Beard Combo": { price: "$20", duration: 60 },
+  "Other Custom Style": { price: "$20", duration: 60 },
 };
 
 const dateInput = document.querySelector("#appointment-date");
@@ -287,7 +287,7 @@ function renderDayBookings() {
     time.textContent = `${formatTimeLabel(entry.time)} - ${formatTimeLabel(entry.endTime)}`;
 
     const details = document.createElement("span");
-    details.textContent = `${entry.name} | ${entry.service} | ${formatDurationLabel(entry.duration || 30)}`;
+    details.textContent = `${entry.name} | ${entry.service} | ${formatDurationLabel(entry.duration || 60)}`;
 
     item.append(time, details);
     dayBookings.appendChild(item);

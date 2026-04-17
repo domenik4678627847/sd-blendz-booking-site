@@ -2,12 +2,12 @@ const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 
 const SERVICE_DEFINITIONS = {
-  "Classic Fade": { price: "$30", duration: 30 },
-  "Fade + Design": { price: "$35", duration: 30 },
-  "Buzz Cut": { price: "$30", duration: 30 },
-  "Beard Trim + Lineup": { price: "$35", duration: 30 },
-  "Cut + Beard Combo": { price: "$30", duration: 45 },
-  "Other Custom Style": { price: "$30", duration: 45 },
+  "Classic Fade": { price: "$20", duration: 60 },
+  "Fade + Design": { price: "$20", duration: 60 },
+  "Buzz Cut": { price: "$20", duration: 60 },
+  "Beard Trim + Lineup": { price: "$20", duration: 60 },
+  "Cut + Beard Combo": { price: "$20", duration: 60 },
+  "Other Custom Style": { price: "$20", duration: 60 },
 };
 
 function getSupabaseClient() {
