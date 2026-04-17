@@ -9,7 +9,7 @@ const SERVICE_DEFINITIONS = {
   "Cut + Beard Combo": { price: "$20", duration: 60 },
   "Other Custom Style": { price: "$20", duration: 60 },
 };
-const BARBER_OPTIONS = ["William", "Domenik"];
+const BARBER_OPTIONS = ["Shae", "Domenik"];
 
 function getSupabaseClient() {
   const supabaseUrl = process.env.SUPABASE_URL;

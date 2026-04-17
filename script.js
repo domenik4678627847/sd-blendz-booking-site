@@ -16,7 +16,7 @@ const SERVICE_DEFINITIONS = {
   "Cut + Beard Combo": { price: "$20", duration: 60 },
   "Other Custom Style": { price: "$20", duration: 60 },
 };
-const BARBER_OPTIONS = ["William", "Domenik"];
+const BARBER_OPTIONS = ["Shae", "Domenik"];
 
 const dateInput = document.querySelector("#appointment-date");
 const slotsGrid = document.querySelector("#slots-grid");
@@ -384,7 +384,7 @@ function renderSlots() {
 
   if (!selectedBarber) {
     slotsSubtitle.textContent = "Choose a barber to load that schedule.";
-    setSlotMessage("Pick William or Domenik before choosing a time.", "error");
+    setSlotMessage("Pick Shae or Domenik before choosing a time.", "error");
     renderSummary();
     renderDayBookings();
     return;
@@ -505,7 +505,7 @@ bookingForm.addEventListener("submit", async (event) => {
   }
 
   if (!selectedBarber) {
-    setFeedback("Choose William or Domenik before confirming the booking.", "error");
+    setFeedback("Choose Shae or Domenik before confirming the booking.", "error");
     return;
   }
 
